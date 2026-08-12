@@ -4,7 +4,7 @@ import path from 'path';
 
 dotenv.config();
 
-const projectRef = 'pxvhovctyewwppwkldaq';
+const projectRef = process.env.SUPABASE_PROJECT_REF || 'dtjmckbrofevgfqbkzli';
 const accessToken = process.env.SUPABASE_ACCESS_TOKEN;
 
 if (!accessToken) {
