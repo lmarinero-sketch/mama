@@ -125,13 +125,22 @@ export const AdminDashboardPage: React.FC = () => {
             </p>
           </div>
 
-          <Link
-            to="/admin/clientes"
-            className="py-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm flex items-center gap-1 active:scale-95"
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span>+ Cliente</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/admin/orders"
+              className="py-1.5 px-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs shadow-sm flex items-center gap-1 active:scale-95"
+            >
+              <Receipt className="w-3.5 h-3.5" />
+              <span>Pedidos 7D</span>
+            </Link>
+            <Link
+              to="/admin/clientes"
+              className="py-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm flex items-center gap-1 active:scale-95"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>+ Cliente</span>
+            </Link>
+          </div>
         </div>
 
         {/* Date Selector Switcher (Simula los días de las fotos) */}

@@ -17,6 +17,8 @@ export interface Product {
   is_available: boolean;
   badge_text?: string;
   sort_order: number;
+  stock_quantity?: number;
+  min_stock_alert?: number;
   category?: Category;
 }
 
@@ -41,19 +43,69 @@ export interface Customer {
   latitude?: number;
   longitude?: number;
   google_maps_url?: string;
+  is_referred?: boolean;
+  preferred_day?: string;
   
   // CAMPOS DE CONTROL DIARIO EXTRAÍDOS DE LAS FOTOS DEL CUADERNO
   last_order_details?: string;
   last_order_amount: number;
-  last_order_date: string; // YYYY-MM-DD (2026-07-28, 2026-07-29, 2026-07-30, 2026-07-31)
+  last_order_date: string; // YYYY-MM-DD
   debt_amount: number;     // Deuda pendiente
-  cobro_date: string;      // Fecha de cobro agendada
+  cobro_date: string;      // Fecha de cobro agendada (7 días)
   cobro_notes?: string;    // ej: "Pasaron para el Martes Rendido"
   payment_method?: 'EFECTIVO' | 'TRANSFERENCIA' | 'PENDIENTE';
   payment_status: 'PENDIENTE' | 'COBRADO_PARCIAL' | 'COBRADO_TOTAL' | 'POSPUESTO';
   
   created_at?: string;
   updated_at?: string;
+}
+
+export interface OrderItem {
+  id?: string;
+  order_id?: string;
+  product_id: string;
+  requested_qty: number;
+  actual_qty_weight?: number;
+  unit_price: number;
+  subtotal: number;
+  product?: Product;
+}
+
+export interface Order {
+  id: string;
+  customer_id: string;
+  order_date: string;
+  due_date: string; // Fecha de cobro a 7 días
+  status: 'PENDIENTE' | 'DESPACHADO' | 'COBRADO' | 'CANCELADO';
+  estimated_total: number;
+  actual_total: number;
+  payment_status: 'PENDIENTE' | 'COBRADO_PARCIAL' | 'COBRADO_TOTAL';
+  payment_method?: 'EFECTIVO' | 'TRANSFERENCIA' | 'PENDIENTE';
+  notes?: string;
+  created_at?: string;
+  customer?: Customer;
+  items?: OrderItem[];
+}
+
+export interface SupplierPurchaseItem {
+  id?: string;
+  purchase_id?: string;
+  product_id: string;
+  quantity: number;
+  unit_cost: number;
+  subtotal: number;
+  product?: Product;
+}
+
+export interface SupplierPurchase {
+  id: string;
+  supplier_name: string;
+  invoice_number?: string;
+  purchase_date: string;
+  total_amount: number;
+  notes?: string;
+  created_at?: string;
+  items?: SupplierPurchaseItem[];
 }
 
 export interface DailyExpense {

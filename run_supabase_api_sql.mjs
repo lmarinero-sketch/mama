@@ -37,7 +37,12 @@ async function main() {
   const ok1 = await runSQLViaApi(schemaSql);
 
   if (ok1) {
-    console.log('✅ Esquema DDL y Políticas RLS aplicadas en la base de datos de Supabase!');
+    console.log('✅ Esquema inicial DDL aplicado!');
+    const ordersStockSql = fs.readFileSync(path.join(process.cwd(), 'supabase', 'migrations', '20260812_orders_and_stock.sql'), 'utf-8');
+    const okOrders = await runSQLViaApi(ordersStockSql);
+    if (okOrders) {
+      console.log('✅ Esquema de Pedidos a 7 días, Stock y Compras aplicado con éxito!');
+    }
     const seedSql = fs.readFileSync(path.join(process.cwd(), 'supabase', 'seed.sql'), 'utf-8');
     const ok2 = await runSQLViaApi(seedSql);
     if (ok2) {

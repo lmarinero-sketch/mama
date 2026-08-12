@@ -7,6 +7,8 @@ import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminVisualEditorPage } from './pages/AdminVisualEditorPage';
 import { AdminProductsPage } from './pages/AdminProductsPage';
 import { AdminCustomersPage } from './pages/AdminCustomersPage';
+import { AdminOrdersPage } from './pages/AdminOrdersPage';
+import { AdminStockPage } from './pages/AdminStockPage';
 
 const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useApp();
@@ -31,6 +33,22 @@ export const AppContent: React.FC = () => {
         element={
           <ProtectedAdminRoute>
             <AdminDashboardPage />
+          </ProtectedAdminRoute>
+        }
+      />
+      <Route
+        path="/admin/orders"
+        element={
+          <ProtectedAdminRoute>
+            <AdminOrdersPage />
+          </ProtectedAdminRoute>
+        }
+      />
+      <Route
+        path="/admin/stock"
+        element={
+          <ProtectedAdminRoute>
+            <AdminStockPage />
           </ProtectedAdminRoute>
         }
       />
