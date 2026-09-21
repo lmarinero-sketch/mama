@@ -11,6 +11,7 @@ export interface Product {
   name: string;
   description?: string;
   price: number;
+  cost_price?: number;
   unit: string;
   image_url?: string;
   is_featured: boolean;
@@ -19,7 +20,23 @@ export interface Product {
   sort_order: number;
   stock_quantity?: number;
   min_stock_alert?: number;
+  allows_decimals?: boolean;
   category?: Category;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ProductPriceHistory {
+  id: string;
+  product_id: string;
+  old_price: number;
+  new_price: number;
+  old_cost_price: number;
+  new_cost_price: number;
+  variation_percentage: number;
+  notes?: string;
+  changed_at: string;
+  product?: Product;
 }
 
 export interface Promotion {
@@ -44,17 +61,18 @@ export interface Customer {
   longitude?: number;
   google_maps_url?: string;
   is_referred?: boolean;
+  visit_day?: string; // 'Lunes' | 'Martes' | 'Miércoles' | 'Jueves' | 'Viernes' | 'Sábado'
   preferred_day?: string;
   
-  // CAMPOS DE CONTROL DIARIO EXTRAÍDOS DE LAS FOTOS DEL CUADERNO
+  // CAMPOS DE CONTROL FINANCIERO Y CUENTA CORRIENTE
   last_order_details?: string;
   last_order_amount: number;
-  last_order_date: string; // YYYY-MM-DD
-  debt_amount: number;     // Deuda pendiente
-  cobro_date: string;      // Fecha de cobro agendada (7 días)
-  cobro_notes?: string;    // ej: "Pasaron para el Martes Rendido"
+  last_order_date?: string; // YYYY-MM-DD
+  debt_amount: number;     // Deuda acumulada de cuenta corriente
+  cobro_date?: string;      // Fecha programada de cobro
+  cobro_notes?: string;
   payment_method?: 'EFECTIVO' | 'TRANSFERENCIA' | 'PENDIENTE';
-  payment_status: 'PENDIENTE' | 'COBRADO_PARCIAL' | 'COBRADO_TOTAL' | 'POSPUESTO';
+  payment_status: 'Al Día' | 'Con Deuda' | 'Cobro Pendiente' | 'PENDIENTE' | 'COBRADO_PARCIAL' | 'COBRADO_TOTAL';
   
   created_at?: string;
   updated_at?: string;
@@ -63,28 +81,48 @@ export interface Customer {
 export interface OrderItem {
   id?: string;
   order_id?: string;
-  product_id: string;
-  requested_qty: number;
+  product_id?: string;
+  product_name?: string;
+  requested_qty: number; // Soporta decimales: 1.5 kg, 0.45 kg, etc.
   actual_qty_weight?: number;
   unit_price: number;
+  unit_cost?: number;
+  unit?: string;
   subtotal: number;
   product?: Product;
+  created_at?: string;
 }
 
 export interface Order {
   id: string;
+  order_number?: number;
   customer_id: string;
   order_date: string;
-  due_date: string; // Fecha de cobro a 7 días
+  due_date: string; // Fecha de cobro programada
   status: 'PENDIENTE' | 'DESPACHADO' | 'COBRADO' | 'CANCELADO';
   estimated_total: number;
   actual_total: number;
+  paid_amount: number;
   payment_status: 'PENDIENTE' | 'COBRADO_PARCIAL' | 'COBRADO_TOTAL';
   payment_method?: 'EFECTIVO' | 'TRANSFERENCIA' | 'PENDIENTE';
   notes?: string;
   created_at?: string;
+  updated_at?: string;
   customer?: Customer;
   items?: OrderItem[];
+}
+
+export interface CustomerPayment {
+  id: string;
+  customer_id: string;
+  order_id?: string;
+  amount: number;
+  payment_method: 'EFECTIVO' | 'TRANSFERENCIA' | 'OTRO';
+  payment_date: string;
+  notes?: string;
+  created_at?: string;
+  customer?: Customer;
+  order?: Order;
 }
 
 export interface SupplierPurchaseItem {

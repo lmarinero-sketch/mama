@@ -2,15 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  html {
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  body {
-    background-color: #FFFDF9;
-    color: #1E293B;
-  }
+:root {
+  font-family: Calibri, "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+}
+
+body {
+  font-family: Calibri, "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  background-color: #F4F7F3;
+  color: #243627;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar matching cafe project */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F4F7F3;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD8C8;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5E7B60;
+}
+
+/* Glassmorphic elements matching cafe project */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(203, 216, 200, 0.6);
+}
+
+.glass-header {
+  background: rgba(244, 247, 243, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(203, 216, 200, 0.7);
+}
+
+.custom-shadow {
+  box-shadow: 0 4px 20px -2px rgba(94, 123, 96, 0.08);
 }
 
 /* Custom scrollbars for mobile horizontal pills */
@@ -20,11 +58,4 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-/* Glassmorphism mobile header */
-.glass-header {
-  background: rgba(255, 253, 249, 0.88);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }

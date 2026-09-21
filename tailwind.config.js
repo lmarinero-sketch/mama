@@ -7,33 +7,41 @@ export default {
   theme: {
     extend: {
       colors: {
+        brand: {
+          bg: "#F4F7F3",
+          card: "#FFFFFF",
+          secondary: "#CBD8C8",
+          brown: "#5E7B60",
+          dark: "#243627",
+          yellow: "#DCE6C6",
+          softYellow: "#EBF2DC",
+          green: "#90A88D",
+          red: "#E5A9A4",
+          cream: "#E8EFE6"
+        },
         cream: {
-          50: '#FFFDF9',
-          100: '#FDF9F0',
-          200: '#F7EFE0',
+          50: '#F4F7F3',
+          100: '#E8EFE6',
+          200: '#CBD8C8',
         },
         deli: {
-          50: '#FFF1F2',
-          100: '#FFE4E6',
-          200: '#FECDD3',
-          500: '#F43F5E',
-          600: '#E11D48',
-          700: '#BE123C',
-          800: '#9F1239',
-        },
-        sage: {
-          50: '#ECFDF5',
-          100: '#D1FAE5',
-          500: '#10B981',
-          600: '#059669',
+          50: '#F4F7F3',
+          100: '#EBF2DC',
+          200: '#DCE6C6',
+          500: '#5E7B60',
+          600: '#4F6951',
+          700: '#3D523F',
+          800: '#243627',
         }
       },
       fontFamily: {
-        sans: ['Outfit', 'Inter', 'sans-serif'],
+        sans: ['Calibri', 'Segoe UI', 'sans-serif'],
       },
       boxShadow: {
-        'mobile-card': '0 4px 20px -2px rgba(160, 50, 70, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04)',
-        'mobile-nav': '0 -4px 25px 0 rgba(0, 0, 0, 0.08)',
+        'soft': '0 4px 20px -2px rgba(94, 123, 96, 0.08)',
+        'soft-lg': '0 10px 25px -3px rgba(36, 54, 39, 0.12)',
+        'mobile-card': '0 4px 20px -2px rgba(94, 123, 96, 0.08)',
+        'mobile-nav': '0 -4px 25px 0 rgba(36, 54, 39, 0.08)',
       }
     },
   },

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Product } from '../../types';
 import { useApp } from '../../context/AppContext';
 import { MobileImageUploader } from './MobileImageUploader';
-import { X, Save, Check, Trash2, Package } from 'lucide-react';
+import { X, Save, Check, Trash2, Package, DollarSign, TrendingUp } from 'lucide-react';
+import { formatCurrency } from '../../lib/utils';
 
 interface MobileProductModalProps {
   isOpen: boolean;
@@ -21,8 +22,9 @@ export const MobileProductModal: React.FC<MobileProductModalProps> = ({
     name: '',
     description: '',
     price: 0,
-    unit: '100g',
-    category_id: categories[0]?.id || 'cat-1',
+    cost_price: 0,
+    unit: 'kg',
+    category_id: categories[0]?.id || '',
     badge_text: '',
     image_url: '',
     is_featured: false,
@@ -39,17 +41,23 @@ export const MobileProductModal: React.FC<MobileProductModalProps> = ({
         name: '',
         description: '',
         price: 0,
-        unit: '100g',
-        category_id: categories[0]?.id || 'cat-1',
+        cost_price: 0,
+        unit: 'kg',
+        category_id: categories[0]?.id || '',
         badge_text: '',
         image_url: '',
         is_featured: false,
         is_available: true,
       });
     }
-  }, [productToEdit, categories]);
+  }, [productToEdit, categories, isOpen]);
 
   if (!isOpen) return null;
+
+  const cost = Number(formData.cost_price || 0);
+  const price = Number(formData.price || 0);
+  const profit = price - cost;
+  const markupPercent = cost > 0 ? ((profit / cost) * 100).toFixed(1) : '0.0';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,9 +89,12 @@ export const MobileProductModal: React.FC<MobileProductModalProps> = ({
             <div className="w-8 h-8 rounded-xl bg-deli-600 text-white flex items-center justify-center font-bold">
               <Package className="w-4 h-4" />
             </div>
-            <h3 className="font-extrabold text-slate-900 text-sm">
-              {productToEdit ? 'Editar Producto' : 'Nuevo Producto'}
-            </h3>
+            <div>
+              <h3 className="font-extrabold text-slate-900 text-sm">
+                {productToEdit ? 'Editar Fiambre / Queso' : 'Cargar Nuevo Fiambre'}
+              </h3>
+              <p className="text-[10px] text-slate-500">Precios por peso, costos y variaciones</p>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -94,21 +105,23 @@ export const MobileProductModal: React.FC<MobileProductModalProps> = ({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-4 overflow-y-auto flex-1 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 overflow-y-auto flex-1 space-y-3.5">
           {/* Image Uploader */}
           <MobileImageUploader
             currentImageUrl={formData.image_url}
             onImageUploaded={(url) => setFormData((prev) => ({ ...prev, image_url: url }))}
-            label="Foto del Fiambre / Queso"
+            label="Foto del Fiambre / Queso (Subir desde cámara o galería)"
           />
 
           {/* Product Name */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Nombre del Fiambre / Producto *</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Nombre del Fiambre / Producto *
+            </label>
             <input
               type="text"
               required
-              placeholder="Ej: Jamón Cocido Natural"
+              placeholder="Ej: Queso Tybo Danbo Barra / Jamón Cocido"
               value={formData.name || ''}
               onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
               className="w-full px-3 py-2.5 bg-cream-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-semibold focus:ring-2 focus:ring-deli-500/40 focus:outline-none"
@@ -131,34 +144,68 @@ export const MobileProductModal: React.FC<MobileProductModalProps> = ({
             </select>
           </div>
 
-          {/* Price & Unit Grid */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Precio ($ ARS) *</label>
-              <input
-                type="number"
-                step="0.01"
-                inputMode="decimal"
-                required
-                placeholder="1850"
-                value={formData.price || ''}
-                onChange={(e) => setFormData((prev) => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                className="w-full px-3 py-2.5 bg-cream-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-bold text-deli-700 focus:ring-2 focus:ring-deli-500/40 focus:outline-none"
-              />
+          {/* Cost Price, Sale Price & Unit Grid */}
+          <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2.5">
+            <div className="grid grid-cols-2 gap-2.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">
+                  Precio de Costo ($) *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  inputMode="decimal"
+                  required
+                  placeholder="Ej: 6900"
+                  value={formData.cost_price ?? ''}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, cost_price: parseFloat(e.target.value) || 0 }))}
+                  className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 font-mono font-bold focus:ring-2 focus:ring-deli-500/40 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-deli-700 mb-1">
+                  Precio de Venta ($) *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  inputMode="decimal"
+                  required
+                  placeholder="Ej: 9800"
+                  value={formData.price ?? ''}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                  className="w-full px-3 py-2.5 bg-white border border-deli-300 rounded-xl text-xs text-deli-700 font-mono font-black focus:ring-2 focus:ring-deli-500/40 focus:outline-none"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Unidad de Medida</label>
-              <select
-                value={formData.unit || '100g'}
-                onChange={(e) => setFormData((prev) => ({ ...prev, unit: e.target.value }))}
-                className="w-full px-3 py-2.5 bg-cream-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-semibold focus:ring-2 focus:ring-deli-500/40 focus:outline-none"
-              >
-                <option value="100g">por 100g</option>
-                <option value="Kg">por Kilo (Kg)</option>
-                <option value="Combo">Combo / Tabla</option>
-                <option value="Pieza">Pieza Entera</option>
-                <option value="Unidad">Unidad</option>
-              </select>
+
+            <div className="grid grid-cols-2 gap-2.5 items-center">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Unidad de Venta</label>
+                <select
+                  value={formData.unit || 'kg'}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, unit: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none"
+                >
+                  <option value="kg">por Kilo (kg)</option>
+                  <option value="100g">por 100g</option>
+                  <option value="Horma">Horma / Barra</option>
+                  <option value="Pieza">Pieza</option>
+                  <option value="Unidad">Unidad</option>
+                </select>
+              </div>
+
+              {/* Ganancia y Margen Estimado */}
+              <div className="p-2 bg-emerald-50 rounded-xl border border-emerald-200 text-center">
+                <div className="text-[10px] text-emerald-700 font-bold">Margen de Ganancia:</div>
+                <div className="text-xs font-black text-emerald-800 font-mono">
+                  {cost > 0 ? `+${markupPercent}%` : '-'}
+                  <span className="text-[10px] block font-medium">({formatCurrency(profit)} / {formData.unit || 'kg'})</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -167,10 +214,10 @@ export const MobileProductModal: React.FC<MobileProductModalProps> = ({
             <label className="block text-xs font-bold text-slate-700 mb-1">Etiqueta Destacada (Opcional)</label>
             <input
               type="text"
-              placeholder="Ej: Oferta, Más Vendido, Gourmet"
+              placeholder="Ej: Oferta Semanal, Más Pedido, Promo"
               value={formData.badge_text || ''}
               onChange={(e) => setFormData((prev) => ({ ...prev, badge_text: e.target.value }))}
-              className="w-full px-3 py-2.5 bg-cream-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-deli-500/40 focus:outline-none"
+              className="w-full px-3 py-2 bg-cream-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-deli-500/40 focus:outline-none"
             />
           </div>
 
@@ -178,7 +225,7 @@ export const MobileProductModal: React.FC<MobileProductModalProps> = ({
             <label className="block text-xs font-bold text-slate-700 mb-1">Descripción</label>
             <textarea
               rows={2}
-              placeholder="Ej: Elaborado con pierna de cerdo seleccionada..."
+              placeholder="Ej: Queso Tybo en barra entera, suave y de fácil feteado..."
               value={formData.description || ''}
               onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
               className="w-full px-3 py-2 bg-cream-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-deli-500/40 focus:outline-none"
@@ -189,7 +236,7 @@ export const MobileProductModal: React.FC<MobileProductModalProps> = ({
           <div className="flex items-center justify-between p-3 bg-cream-50 rounded-xl border border-slate-200/60">
             <div>
               <span className="text-xs font-bold text-slate-800 block">Disponible para Venta</span>
-              <span className="text-[10px] text-slate-400">Mostrar en el catálogo público</span>
+              <span className="text-[10px] text-slate-400">Habilitar en toma de pedidos y catálogo</span>
             </div>
             <input
               type="checkbox"
@@ -217,7 +264,7 @@ export const MobileProductModal: React.FC<MobileProductModalProps> = ({
               className="flex-1 py-3 px-4 bg-gradient-to-r from-deli-600 to-rose-500 text-white font-extrabold text-xs rounded-2xl shadow-md shadow-rose-200 flex items-center justify-center gap-2 active:scale-98 transition-all"
             >
               <Save className="w-4 h-4" />
-              <span>{isSaving ? 'Guardando...' : 'GUARDAR PRODUCTO'}</span>
+              <span>{isSaving ? 'Guardando...' : 'GUARDAR FIAMBRE & REGISTRAR PRECIO'}</span>
             </button>
           </div>
         </form>

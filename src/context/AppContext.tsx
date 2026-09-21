@@ -10,6 +10,7 @@ import {
   INITIAL_STORE_INFO 
 } from '../lib/supabase';
 import confetti from 'canvas-confetti';
+import { recordPriceChange } from '../lib/orders';
 
 interface CartItem {
   product: Product;
@@ -21,7 +22,7 @@ interface AppContextType {
   categories: Category[];
   customers: Customer[];
   expenses: DailyExpense[];
-  simulatedDate: string; // '2026-07-28' | '2026-07-29' | '2026-07-30' | '2026-07-31' | 'TODOS'
+  simulatedDate: string; // 'HOY' | 'Lunes' | 'Martes' | 'Miércoles' | 'Jueves' | 'Viernes' | 'Sábado' | 'TODOS'
   heroContent: HeroSectionContent;
   storeInfo: StoreInfoContent;
   selectedCategory: string;
@@ -70,7 +71,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return local ? JSON.parse(local) : INITIAL_EXPENSES;
   });
 
-  const [simulatedDate, setSimulatedDate] = useState<string>('2026-07-31'); // Por defecto Viernes 31/07 (Día 28)
+  const [simulatedDate, setSimulatedDate] = useState<string>('HOY'); // Por defecto 'HOY' (Ruta de hoy en curso)
 
   const [heroContent, setHeroContent] = useState<HeroSectionContent>(() => {
     const local = localStorage.getItem('mama_hero');
@@ -232,35 +233,82 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const saveProduct = async (prodData: Partial<Product>) => {
-    if (prodData.id) {
-      setProducts((prev) =>
-        prev.map((p) => (p.id === prodData.id ? ({ ...p, ...prodData } as Product) : p))
-      );
-      try {
-        await supabase.from('products').update(prodData).eq('id', prodData.id);
-      } catch (e) {
-        console.log('Updated product locally', e);
+    try {
+      if (prodData.id && !prodData.id.startsWith('prod-')) {
+        // Find previous product to check if price or cost changed
+        const existing = products.find(p => p.id === prodData.id);
+        const oldPrice = existing?.price || 0;
+        const newPrice = prodData.price !== undefined ? Number(prodData.price) : oldPrice;
+        const oldCost = existing?.cost_price || 0;
+        const newCost = prodData.cost_price !== undefined ? Number(prodData.cost_price) : oldCost;
+
+        if (existing && (oldPrice !== newPrice || oldCost !== newCost)) {
+          // Record price history
+          recordPriceChange({
+            productId: prodData.id!,
+            oldPrice,
+            newPrice,
+            oldCostPrice: oldCost,
+            newCostPrice: newCost,
+          });
+        }
+
+        const { data, error } = await supabase
+          .from('products')
+          .update(prodData)
+          .eq('id', prodData.id)
+          .select()
+          .single();
+
+        if (!error && data) {
+          setProducts((prev) => prev.map((p) => (p.id === data.id ? data : p)));
+          return;
+        }
       }
-    } else {
-      const newProd: Product = {
-        id: 'prod-' + Date.now(),
-        name: prodData.name || 'Nuevo Producto',
+
+      // New product insert
+      const insertPayload = {
+        name: prodData.name || 'Nuevo Fiambre',
         description: prodData.description || '',
-        price: prodData.price || 0,
-        unit: prodData.unit || '100g',
+        price: Number(prodData.price || 0),
+        cost_price: Number(prodData.cost_price || 0),
+        unit: prodData.unit || 'kg',
         image_url: prodData.image_url || 'https://images.unsplash.com/photo-1524182576066-1d96117a7616?w=600&q=80',
-        category_id: prodData.category_id || categories[0]?.id || 'cat-1',
+        category_id: prodData.category_id || categories[0]?.id || null,
         is_featured: prodData.is_featured ?? false,
         is_available: prodData.is_available ?? true,
         badge_text: prodData.badge_text || '',
         sort_order: products.length + 1,
+        stock_quantity: Number(prodData.stock_quantity || 0),
       };
-      setProducts((prev) => [newProd, ...prev]);
-      try {
-        await supabase.from('products').insert([newProd]);
-      } catch (e) {
-        console.log('Inserted product locally', e);
+
+      const { data: newProd, error } = await supabase
+        .from('products')
+        .insert([insertPayload])
+        .select()
+        .single();
+
+      if (!error && newProd) {
+        setProducts((prev) => [newProd, ...prev]);
+        // Registrar historial inicial
+        recordPriceChange({
+          productId: newProd.id,
+          oldPrice: newProd.price,
+          newPrice: newProd.price,
+          oldCostPrice: newProd.cost_price || 0,
+          newCostPrice: newProd.cost_price || 0,
+          notes: 'Precio inicial'
+        });
+      } else {
+        // Fallback local
+        const fallback: Product = {
+          id: 'prod-' + Date.now(),
+          ...insertPayload,
+        };
+        setProducts((prev) => [fallback, ...prev]);
       }
+    } catch (e) {
+      console.log('Error saving product', e);
     }
   };
 
@@ -274,41 +322,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const saveCustomer = async (custData: Partial<Customer>) => {
-    if (custData.id) {
-      setCustomers((prev) =>
-        prev.map((c) => (c.id === custData.id ? ({ ...c, ...custData } as Customer) : c))
-      );
-      try {
-        await supabase.from('customers').update(custData).eq('id', custData.id);
-      } catch (e) {
-        console.log('Updated customer locally', e);
+    try {
+      if (custData.id && !custData.id.startsWith('cust-')) {
+        const { data, error } = await supabase
+          .from('customers')
+          .update(custData)
+          .eq('id', custData.id)
+          .select()
+          .single();
+
+        if (!error && data) {
+          setCustomers((prev) => prev.map((c) => (c.id === data.id ? data : c)));
+          return;
+        }
       }
-    } else {
-      const newCust: Customer = {
-        id: 'cust-' + Date.now(),
+
+      // New Customer insert
+      const insertPayload = {
         name: custData.name || 'Cliente Nuevo',
         phone: custData.phone || '',
         address: custData.address || '',
         notes: custData.notes || '',
-        latitude: custData.latitude,
-        longitude: custData.longitude,
+        visit_day: custData.visit_day || 'Lunes',
+        preferred_day: custData.visit_day || 'Lunes',
+        latitude: custData.latitude || null,
+        longitude: custData.longitude || null,
         google_maps_url: custData.google_maps_url || (custData.latitude ? `https://www.google.com/maps?q=${custData.latitude},${custData.longitude}` : ''),
         last_order_details: custData.last_order_details || '',
-        last_order_amount: custData.last_order_amount || 0,
-        last_order_date: custData.last_order_date || simulatedDate,
-        debt_amount: custData.debt_amount ?? (custData.last_order_amount || 0),
-        cobro_date: custData.cobro_date || simulatedDate,
-        cobro_notes: custData.cobro_notes || '',
+        last_order_amount: Number(custData.last_order_amount || 0),
+        debt_amount: Number(custData.debt_amount || 0),
+        payment_status: custData.payment_status || (custData.debt_amount && custData.debt_amount > 0 ? 'Con Deuda' : 'Al Día'),
         payment_method: custData.payment_method || 'EFECTIVO',
-        payment_status: custData.payment_status || 'PENDIENTE',
-        created_at: new Date().toISOString()
       };
-      setCustomers((prev) => [newCust, ...prev]);
-      try {
-        await supabase.from('customers').insert([newCust]);
-      } catch (e) {
-        console.log('Inserted customer locally', e);
+
+      const { data: newCust, error } = await supabase
+        .from('customers')
+        .insert([insertPayload])
+        .select()
+        .single();
+
+      if (!error && newCust) {
+        setCustomers((prev) => [newCust, ...prev]);
+      } else {
+        const fallback: Customer = {
+          id: 'cust-' + Date.now(),
+          ...insertPayload,
+          payment_status: insertPayload.payment_status as any,
+          created_at: new Date().toISOString()
+        };
+        setCustomers((prev) => [fallback, ...prev]);
       }
+    } catch (e) {
+      console.log('Error saving customer', e);
     }
   };
 

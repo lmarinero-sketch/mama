@@ -264,6 +264,41 @@ export const MobileCustomerModal: React.FC<MobileCustomerModalProps> = ({
             />
           </div>
 
+          {/* Día de Visita */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Día de Visita de Ruta *
+            </label>
+            <select
+              value={formData.visit_day || 'Lunes'}
+              onChange={(e) => setFormData((prev) => ({ ...prev, visit_day: e.target.value }))}
+              className="w-full px-3 py-2.5 bg-cream-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-bold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
+            >
+              <option value="Lunes">Lunes</option>
+              <option value="Martes">Martes</option>
+              <option value="Miércoles">Miércoles</option>
+              <option value="Jueves">Jueves</option>
+              <option value="Viernes">Viernes</option>
+              <option value="Sábado">Sábado</option>
+            </select>
+          </div>
+
+          {/* Saldo de Cuenta Corriente / Deuda */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Deuda / Saldo en Cuenta Corriente ($)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              value={formData.debt_amount ?? 0}
+              onChange={(e) => setFormData((prev) => ({ ...prev, debt_amount: parseFloat(e.target.value) || 0 }))}
+              className="w-full px-3 py-2.5 bg-cream-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-mono font-bold focus:ring-2 focus:ring-emerald-500/40 focus:outline-none"
+            />
+          </div>
+
           {/* Notes */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
